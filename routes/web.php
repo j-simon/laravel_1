@@ -98,4 +98,7 @@ Route::get("/allitems", function () {
 
 
 
-
+// http://../p/Jens/Simon
+Route::get("/p/{vorname}/{nachname}", function ($vorname,$nachname) {
+    return $vorname." ".$nachname;
+});
