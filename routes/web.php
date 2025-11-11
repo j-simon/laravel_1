@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Controllers\Article2Controller;
+use App\Http\Controllers\ArticleController;
 use Illuminate\Support\Facades\Route;
 
 
@@ -44,7 +46,7 @@ Route::get("/impressum", function () {
     ]; */
 //....
 
-//Damit sind nicht GET-Routen überhaupt testbar , als 
+// Damit sind nicht GET-Routen überhaupt testbar , als 
 // Testwerkzeug kann man Postman oder andere Request-Tools einsetzen
 Route::post("/anfrage", function () {
     return "post anfrage erhalten!";
@@ -83,14 +85,14 @@ Route::get("/p/{id}", function ($id) {
 // http://localhost/itm/388576931825
 // http://loclahost/itm/167784245516
 Route::get("/produkt/{nr}", function ($nr) {
-    return "<h2>Produktseite für: ".$nr."</h2>";
+    return "<h2>Produktseite für: " . $nr . "</h2>";
 })->name("produkt_link");
 
 // http://localhost/allitems
 Route::get("/allitems", function () {
     return "<h1>Übersicht</h1>
-            <a href='".route('produkt_link', ['nr' => 123])."'>123</a><br>
-            <a href='".route('produkt_link', ['nr' => 'mikrowelle'])."'>Mikrowelle</a><br>
+            <a href='" . route('produkt_link', ['nr' => 123]) . "'>123</a><br>
+            <a href='" . route('produkt_link', ['nr' => 'mikrowelle']) . "'>Mikrowelle</a><br>
             ";
 });
 
@@ -99,6 +101,97 @@ Route::get("/allitems", function () {
 
 
 // http://../p/Jens/Simon
-Route::get("/p/{vorname}/{nachname}", function ($vorname,$nachname) {
-    return $vorname." ".$nachname;
+Route::get("/p/{vorname}/{nachname}", function ($vorname, $nachname) {
+    return $vorname . " " . $nachname;
 });
+
+// use App\Http\Controllers\UserController;
+// Route::get('/user/profile', [UserController::class, 'show'])->name('profile');
+
+// return redirect()->route('profile');
+
+
+
+
+// SEO search engine optimization
+// xyz.de/?id=1
+// xyz.de/?id=2
+// xyz.de/?id=3
+
+// xyz.de/kühlschrank
+// xyz.de/samsung fernseher
+// xyz.de/lenovo thinkpad klhjdffkldg gfd hdfö hdfölk dflö lkdfhldföhg lkfdglkdfgkl
+
+
+// Übung 2
+// http://localhost/helloworld
+Route::get("helloworld",  function () {
+    return "Hello World!";
+});
+
+// Übung 3
+// http://localhost/greeting/Jens/Simon
+Route::get("/greeting/{firstName}/{lastName}", function ($firstName, $lastName) {
+    return $firstName. " " . $lastName;
+});
+
+
+// // http://localhost/alte_url
+Route::get("alte_url",function(){
+
+
+
+
+
+    return redirect('neue_seite');
+});
+
+// http://localhost/neue_seite
+Route::get("neue_seite",function(){
+    return "neue Seite";
+});
+use  App\Http\Controllers\EventController;
+use App\Http\Controllers\TestInvokableController;
+use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
+
+// http://localhost/event_ansehen
+Route::get( '/event_ansehen', [EventController::class, 'tueEtwas']); // customn action
+ 
+// http://localhost/event_ansehen/2/2025
+// http://localhost/event_ansehen/5/2030
+Route::get( '/event_ansehen/{nr}/{jahr}', [EventController::class, 'zeigeEvent']);
+
+//[UserController::class, 'show']
+// $eventObject=new App\Http\Controllers\EventController();
+// $eventObject->tueEtwas();
+
+
+// 2. Resource-Contoller
+// http://localhost/articles
+Route::resource('articles', ArticleController::class);
+
+
+/* REST API - Routing
+1  GET|HEAD        articles .................................................... articles.index › ArticleController@index
+2  POST            articles .................................................... articles.store › ArticleController@store
+3  GET|HEAD        articles/create ........................................... articles.create › ArticleController@create
+4  GET|HEAD        articles/{article} ............................................ articles.show › ArticleController@show
+5  PUT|PATCH       articles/{article} ........................................ articles.update › ArticleController@update
+6  DELETE          articles/{article} ...................................... articles.destroy › ArticleController@destroy
+7  GET|HEAD        articles/{article}/edit ....................................... articles.edit › ArticleController@edit
+  */
+
+// CRUD
+
+// Create
+// Read
+// Update
+// Delete
+
+
+// Beide gehen auf 
+;
+Route::resource('articles2', Article2Controller::class)->except("show")->withoutMiddleware([VerifyCsrfToken::class]);
+Route::get('article2', [Article2Controller::class,"hallo"]);
+
+Route::get('invokeTest',TestInvokableController::class);

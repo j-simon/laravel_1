@@ -1,0 +1,2 @@
+curl -X POST http://localhost/articles2
+curl -X GET http://localhost/invokeTest
