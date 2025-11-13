@@ -1,0 +1,1 @@
+<nav>Navigation<a href="impressum_view">Impressum</a><a href="datenschutz_view">Datenschutz</a></nav>

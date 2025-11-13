@@ -1,5 +1,6 @@
 <?php
 
+
 use App\Http\Controllers\Article2Controller;
 use App\Http\Controllers\ArticleController;
 use Illuminate\Support\Facades\Route;
@@ -13,11 +14,7 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', function () {
     return view('welcome');
 });
-// http://localhost/impressum_view
-Route::get('/impressum_view', function () {
-    $inhalt="Willkommen";
-    return view('impressum',['inhalt' => $inhalt]);
-});
+
 
 // GET-Routen können mit dem Browser über die Adresse getestet werden!
 // http://localhost/impressum
@@ -33,6 +30,35 @@ Route::get("/impressum", function () {
    ";
 });
 
+
+
+
+// http://localhost/impressum_view
+Route::get('/impressum_view', function () {
+    $inhalt="Willkommen";
+    return view('impressum',['inhalt' => $inhalt]);
+});
+
+
+
+
+
+// http://localhost/datenschutz_view
+Route::get('/datenschutz_view', function () {
+    
+    return view('datenschutz');
+});
+
+
+
+
+
+
+// http://localhost/kontakt_seite
+Route::get('/kontakt_seite', function () {
+   //$inhalt="Willkommen";
+    return view('kontakt');//['inhalt' => $inhalt]);
+});
 
 
 
@@ -329,4 +355,46 @@ Route::get("/zuGoogle",function(){
     // return response()->redirectTo("https://google.de");
     return redirect("https://google.de");
     
+});
+
+// name=Jens&email=jens.simon@gmx.net
+// curl -X -v POST http://localhost/submitForm 
+// curl -X -v POST http://localhost/submitForm -d "email=jens.simon@gmx.net"
+// curl -X -v POST http://localhost/submitForm -d "name=Jens" -d "email=jens.simon"
+// curl -X -v POST http://localhost/submitForm -d "name=Jens" -d "email=jens.simon@gmx.net"
+
+
+use App\Http\Controllers\FormController;
+// http://localhost/submitForm
+Route::post("/submitForm",[FormController::class,"submitForm"])
+->withoutMiddleware([VerifyCsrfToken::class]);
+
+Route::get("/thank-you",function(){
+
+    return "Danke!";
+});
+
+
+use App\Http\Controllers\AboutController;
+//  http://localhost/about
+Route::get("/about",[AboutController::class,"showAbout"]);
+
+//  http://localhost/bladeTest
+Route::get("/bladeTest",function(Request $request){
+    $text2=$request->input("text2");
+    $text="<div>hallo Welt!</div><script>alert('gehackt')</script>";
+    // $text2="<div>hallo Welt2!</div><script>alert('gehackt')</script>";
+    return view("bladetest",compact("text","text2"));
+});
+
+
+//  http://localhost/home
+Route::get("/home",function(){
+    return view("home");
+});
+
+
+//  http://localhost/contact
+Route::get("/contact",function(){
+    return view("contact");
 });

@@ -20,5 +20,7 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         //
+        // Sharing global data across all views
+        view()->share('appName', 'Tolle Software - meine App');
     }
 }
