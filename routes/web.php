@@ -35,8 +35,8 @@ Route::get("/impressum", function () {
 
 // http://localhost/impressum_view
 Route::get('/impressum_view', function () {
-    $inhalt="Willkommen";
-    return view('impressum',['inhalt' => $inhalt]);
+    $inhalt = "Willkommen";
+    return view('impressum', ['inhalt' => $inhalt]);
 });
 
 
@@ -45,7 +45,7 @@ Route::get('/impressum_view', function () {
 
 // http://localhost/datenschutz_view
 Route::get('/datenschutz_view', function () {
-    
+
     return view('datenschutz');
 });
 
@@ -56,8 +56,8 @@ Route::get('/datenschutz_view', function () {
 
 // http://localhost/kontakt_seite
 Route::get('/kontakt_seite', function () {
-   //$inhalt="Willkommen";
-    return view('kontakt');//['inhalt' => $inhalt]);
+    //$inhalt="Willkommen";
+    return view('kontakt'); //['inhalt' => $inhalt]);
 });
 
 
@@ -271,17 +271,17 @@ Route::post("/test_request_route", function (Request $request) {
     // );
     // Regeln ok, code läuft weiter
     // Regel nicht OK , dann Redirect auf sich selbst
-if (!$request->filled("vname"))
-    return redirect()->back();
-else
-    // $request->input();
-    // var_dump($_REQUEST['nachname']);
-    //var_dump($_POST); // ['vname'] ="Jens"
-    return "ok\n";
+    if (!$request->filled("vname"))
+        return redirect()->back();
+    else
+        // $request->input();
+        // var_dump($_REQUEST['nachname']);
+        //var_dump($_POST); // ['vname'] ="Jens"
+        return "ok\n";
 })->withoutMiddleware([VerifyCsrfToken::class]);
 
 
-Route::get("/antwort2",function(){
+Route::get("/antwort2", function () {
 
     $data = [
         'name' => 'John Doe',
@@ -289,16 +289,16 @@ Route::get("/antwort2",function(){
     ];
 
     // return response("OK",234);//->json($data);
-// 
+    // 
     return response("Hello, World!")
-    ->withHeaders([
-                'Language' => 'englisch'
-    ]);
+        ->withHeaders([
+            'Language' => 'englisch'
+        ]);
 });
 
 // http://localhost/download
-Route::get("/download",function() {
-    
+Route::get("/download", function () {
+
     $filePath = storage_path('file/test.pdf');
     return response()->download($filePath);
 });
@@ -326,14 +326,14 @@ use Illuminate\Support\Facades\Response;
 // http://localhost/audio-stream
 Route::get('/audio-stream', function () {
     $audioFile = storage_path('audio_streams/song.mp3'); // 6 MB
-    
+
     if (!file_exists($audioFile)) {
         abort(404);
     }
-    
+
     $fileSize = filesize($audioFile);
     $mime = mime_content_type($audioFile);
-    
+
     return Response::stream(function () use ($audioFile) {
         $handle = fopen($audioFile, 'rb');
         while (!feof($handle)) {
@@ -351,10 +351,9 @@ Route::get('/audio-stream', function () {
 });
 
 // http://localhost/zuGoogle
-Route::get("/zuGoogle",function(){
+Route::get("/zuGoogle", function () {
     // return response()->redirectTo("https://google.de");
     return redirect("https://google.de");
-    
 });
 
 // name=Jens&email=jens.simon@gmx.net
@@ -366,35 +365,104 @@ Route::get("/zuGoogle",function(){
 
 use App\Http\Controllers\FormController;
 // http://localhost/submitForm
-Route::post("/submitForm",[FormController::class,"submitForm"])
-->withoutMiddleware([VerifyCsrfToken::class]);
+Route::post("/submitForm", [FormController::class, "submitForm"])
+    ->withoutMiddleware([VerifyCsrfToken::class]);
 
-Route::get("/thank-you",function(){
+Route::get("/thank-you", function () {
 
     return "Danke!";
 });
 
 
 use App\Http\Controllers\AboutController;
+use Illuminate\Support\Facades\DB;
+
 //  http://localhost/about
-Route::get("/about",[AboutController::class,"showAbout"]);
+Route::get("/about", [AboutController::class, "showAbout"]);
 
 //  http://localhost/bladeTest
-Route::get("/bladeTest",function(Request $request){
-    $text2=$request->input("text2");
-    $text="<div>hallo Welt!</div><script>alert('gehackt')</script>";
+Route::get("/bladeTest", function (Request $request) {
+    $text2 = $request->input("text2");
+    $text = "<div>hallo Welt!</div><script>alert('gehackt')</script>";
     // $text2="<div>hallo Welt2!</div><script>alert('gehackt')</script>";
-    return view("bladetest",compact("text","text2"));
+    return view("bladetest", compact("text", "text2"));
 });
 
 
 //  http://localhost/home
-Route::get("/home",function(){
+Route::get("/home", function () {
     return view("home");
 });
 
 
 //  http://localhost/contact
-Route::get("/contact",function(){
+Route::get("/contact", function () {
     return view("contact");
+});
+
+
+
+
+// uebung 8
+
+use App\Http\Controllers\ProfileController;
+use App\Http\Requests\StoreUserRequest;
+
+// http://localhost/profile
+Route::get("profile", [ProfileController::class, "showProfile"]);
+
+
+
+
+// Kapitel 9 - Formular
+// http://localhost/user/form // Ansicht des Formular muss GET Route
+Route::get('/user/form', function () {
+    return view('user_form');
+})->name('user.form');
+
+Route::post(
+    '/user/store',
+    function (StoreUserRequest $request) {
+        
+        // Daten Vorverarbeitung, Request auswerten, evtl. Inhaltsfehler per
+        // Validierung finden
+    //     $wert = $request->validate([
+    //         'name' => 'required|string|max:255',
+    //         'email' => 'required|email'
+    //     ], [
+    //     'name.required' => 'Gib bitte deinen Namen ein.',
+    //     'name.string' => 'The name must be a valid text string.',
+    //     'name.max' => 'The name may not be greater than 255 characters.',
+    //     'email.required' => 'We need your email address to proceed.',
+    //     'email.email' => 'Please provide a valid email address.'
+    // ]); // Daten des Formulars speichern muss POST Route
+
+        // $wert ist ein Array
+        // public function validate($array){
+
+        //     if () return redirect()->back();// falsch
+        //     else  return array // richtig
+        // }
+
+
+        // speichern
+        $name=$request->input("name");
+        $email=$request->input("email");
+        return "speichern name:".htmlentities($name, ENT_QUOTES | ENT_HTML5, 'UTF-8')." und email:$email";
+    }
+)->name('user.store');
+
+
+//  http://localhost/sqlInjection
+Route::get("/sqlInjection", function () {
+
+    $email = "jens.simon@gmx.net"; // Simulierte Eingabe aus Kontaktformular
+    $users = DB::select("SELECT * FROM users WHERE email = '$email'");
+    var_dump($users);
+
+    // Vulnerable: direkte Konkatenation
+    
+    $email = "jens.simon@gmx.net' OR 1=1;delete from users; -- "; //"jens';select * from users;";
+    $users = DB::select("SELECT * FROM users WHERE email = '$email'");
+    var_dump($users);
 });
