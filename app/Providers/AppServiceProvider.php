@@ -2,6 +2,11 @@
 
 namespace App\Providers;
 
+use App\Contracts\PaymentGatewayContract;
+use App\Services\NotificationService;
+use App\Services\PaymentGateway;
+use App\Services\ReportService;
+use App\Services\StripePaymentGateway;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -11,7 +16,22 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        // Registrierung einer eigenen Klasse die im app/Services Ordner
+        $this->app->bind(PaymentGateway::class, function () {
+            return new PaymentGateway();
+        });//,true);
+
+         // Registrierung einer eigenen Klasse die im app/Services Ordner
+        $this->app->singleton(ReportService::class, function () {
+            return new ReportService();
+        });//,true);
+
+       $this->app->singleton(NotificationService::class, function ($app) {
+            return new NotificationService($app->make(\Illuminate\Contracts\Mail\Mailer::class));
+        });
+
+       // wlakthrough
+        $this->app->bind(PaymentGatewayContract::class, StripePaymentGateway::class);
     }
 
     /**

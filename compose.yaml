@@ -23,6 +23,30 @@ services:
             - sail
         depends_on:
             - mysql
+
+    mailcatcher:
+        image: schickling/mailcatcher
+        ports:
+                - "1080:1080" # Web Interface
+                - "1025:1025" # SMTP Server
+        networks:
+                - sail
+
+    phpmyadmin:
+        image: phpmyadmin/phpmyadmin:latest
+        restart: always
+        depends_on:
+            - mysql
+        environment:
+            - PMA_HOST=mysql
+            - PMA_USER=root
+            - PMA_PASSWORD=password
+        ports:
+            - "8081:80"
+        networks:
+        - sail
+
+
     mysql:
         image: 'mysql/mysql-server:8.0'
         ports:

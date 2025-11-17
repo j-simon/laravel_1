@@ -1,5 +1,7 @@
 <?php
 
+use Illuminate\Support\Facades\Facade;
+
 return [
 
     /*
@@ -122,5 +124,13 @@ return [
         'driver' => env('APP_MAINTENANCE_DRIVER', 'file'),
         'store' => env('APP_MAINTENANCE_STORE', 'database'),
     ],
+
+    'aliases' => array_merge(
+        Facade::defaultAliases()->toArray(),
+        [
+            'PaymentGatewayFacade' => App\Facades\PaymentGatewayFacade::class,
+            'Report' => App\Facades\Report::class,
+        ]
+    ),
 
 ];

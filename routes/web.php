@@ -1,6 +1,7 @@
 <?php
 
-
+use App\Facades\PaymentGatewayFacade;
+use App\Facades\Report;
 use App\Http\Controllers\Article2Controller;
 use App\Http\Controllers\ArticleController;
 use Illuminate\Support\Facades\Route;
@@ -408,6 +409,7 @@ Route::get("/contact", function () {
 use App\Http\Controllers\ProfileController;
 use App\Http\Requests\StoreUserRequest;
 
+
 // http://localhost/profile
 Route::get("profile", [ProfileController::class, "showProfile"]);
 
@@ -465,4 +467,47 @@ Route::get("/sqlInjection", function () {
     $email = "jens.simon@gmx.net' OR 1=1;delete from users; -- "; //"jens';select * from users;";
     $users = DB::select("SELECT * FROM users WHERE email = '$email'");
     var_dump($users);
+});
+
+
+
+
+// http://localhost/eigeneServiceKlasseBenutzen
+use App\Services\PaymentGateway;
+
+Route::get("/eigeneServiceKlasseBenutzen", function () {
+    // die (PaymentGateway::class);
+
+    // eigene Variante
+    $pg1 = new PaymentGateway();
+    // var_dump($pg1);
+
+       // eigene Variante
+    $pg2 = new PaymentGateway();
+    // var_dump($pg2);
+
+    // var_dump( $pg1 === $pg2); // false // false nicht seingleton
+
+
+
+
+    // Laravel Service Container Variante
+    $pg1 = app()->make(PaymentGateway::class); // register wo bind war -> new PaymentGateway();
+    // echo $pg1->process(); // Output: "Payment processed"
+    $pg2 = app()->make(PaymentGateway::class); // register wo bind war -> new PaymentGateway();
+    // echo $pg2->process(); // Output: "Payment processed"
+
+    // var_dump( $pg1 === $pg2); // false // false nicht seingleton
+    
+    echo PaymentGatewayFacade::process();
+    echo Report::generateSalesReport();
+    
+});
+use App\Services\NotificationService;
+
+// http://localhost/testNotification
+Route::get("testNotification",function(){
+
+    $notificationService = app(NotificationService::class);
+    echo $notificationService->sendNotification('jens.simon@gmx.net', 'Welcome!', 'Thanks for joining our platform.');
 });
