@@ -128,8 +128,9 @@ return [
     'aliases' => array_merge(
         Facade::defaultAliases()->toArray(),
         [
-            'PaymentGatewayFacade' => App\Facades\PaymentGatewayFacade::class,
-            'Report' => App\Facades\Report::class,
+        //     'PaymentGatewayFacade' => App\Facades\PaymentGatewayFacade::class,
+            // 'Report' => App\Facades\Report::class,
+
         ]
     ),
 

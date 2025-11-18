@@ -411,33 +411,35 @@ use App\Http\Requests\StoreUserRequest;
 
 
 // http://localhost/profile
-Route::get("profile", [ProfileController::class, "showProfile"]);
+// Route::get("profile", [ProfileController::class, "showProfile"]);
+Route::get("profile", "ProfileController@showProfile");
 
 
 
 
 // Kapitel 9 - Formular
 // http://localhost/user/form // Ansicht des Formular muss GET Route
-Route::get('/user/form', function () {
+Route::get('/user/form', function (Request $request) {
+    dump($request);
     return view('user_form');
 })->name('user.form');
 
 Route::post(
     '/user/store',
     function (StoreUserRequest $request) {
-        
+
         // Daten Vorverarbeitung, Request auswerten, evtl. Inhaltsfehler per
         // Validierung finden
-    //     $wert = $request->validate([
-    //         'name' => 'required|string|max:255',
-    //         'email' => 'required|email'
-    //     ], [
-    //     'name.required' => 'Gib bitte deinen Namen ein.',
-    //     'name.string' => 'The name must be a valid text string.',
-    //     'name.max' => 'The name may not be greater than 255 characters.',
-    //     'email.required' => 'We need your email address to proceed.',
-    //     'email.email' => 'Please provide a valid email address.'
-    // ]); // Daten des Formulars speichern muss POST Route
+        //     $wert = $request->validate([
+        //         'name' => 'required|string|max:255',
+        //         'email' => 'required|email'
+        //     ], [
+        //     'name.required' => 'Gib bitte deinen Namen ein.',
+        //     'name.string' => 'The name must be a valid text string.',
+        //     'name.max' => 'The name may not be greater than 255 characters.',
+        //     'email.required' => 'We need your email address to proceed.',
+        //     'email.email' => 'Please provide a valid email address.'
+        // ]); // Daten des Formulars speichern muss POST Route
 
         // $wert ist ein Array
         // public function validate($array){
@@ -448,9 +450,9 @@ Route::post(
 
 
         // speichern
-        $name=$request->input("name");
-        $email=$request->input("email");
-        return "speichern name:".htmlentities($name, ENT_QUOTES | ENT_HTML5, 'UTF-8')." und email:$email";
+        $name = $request->input("name");
+        $email = $request->input("email");
+        return "speichern name:" . htmlentities($name, ENT_QUOTES | ENT_HTML5, 'UTF-8') . " und email:$email";
     }
 )->name('user.store');
 
@@ -463,7 +465,7 @@ Route::get("/sqlInjection", function () {
     var_dump($users);
 
     // Vulnerable: direkte Konkatenation
-    
+
     $email = "jens.simon@gmx.net' OR 1=1;delete from users; -- "; //"jens';select * from users;";
     $users = DB::select("SELECT * FROM users WHERE email = '$email'");
     var_dump($users);
@@ -482,7 +484,7 @@ Route::get("/eigeneServiceKlasseBenutzen", function () {
     $pg1 = new PaymentGateway();
     // var_dump($pg1);
 
-       // eigene Variante
+    // eigene Variante
     $pg2 = new PaymentGateway();
     // var_dump($pg2);
 
@@ -498,16 +500,86 @@ Route::get("/eigeneServiceKlasseBenutzen", function () {
     // echo $pg2->process(); // Output: "Payment processed"
 
     // var_dump( $pg1 === $pg2); // false // false nicht seingleton
-    
+
     echo PaymentGatewayFacade::process();
     echo Report::generateSalesReport();
-    
 });
+
 use App\Services\NotificationService;
 
 // http://localhost/testNotification
-Route::get("testNotification",function(){
+Route::get("testNotification", function () {
 
     $notificationService = app(NotificationService::class);
     echo $notificationService->sendNotification('jens.simon@gmx.net', 'Welcome!', 'Thanks for joining our platform.');
+});
+
+// http://localhost/raw_sql
+Route::get("raw_sql", function () {
+    $users = DB::select("SELECT * FROM users;");
+    // var_dump($users);
+    dump($users);
+
+    return "fertig!";
+});
+
+
+// uebung 10
+use App\Facades\MailServiceFacade;
+//  http://localhost/send-email-ue10
+Route::get('/send-email-ue10', function () {
+    return MailServiceFacade::send('Welcome to the Laravel course!');
+});
+
+// use Illuminate\Support\Facades\DB;
+// http://localhost/test_debugbar_raw_sql
+Route::get('/test_debugbar_raw_sql', function () {
+
+    $erg=DB::insert('INSERT IGNORE INTO users (name, email) VALUES (?, ?)', ['John Doe', 'john@example.com']);
+    dump($erg);
+
+    // ohne parameter binding ! Vorsicht möglichkeit SQL-Injection
+    $users = DB::select('SELECT * FROM users WHERE id=1');
+    dump($users);
+
+    // mit parameter binding (fragezeichen)  SQL-Injection fest!
+    $users = DB::select('SELECT * FROM users WHERE id=?', [2]);
+    dump($users);
+
+    // mit parameter binding (fragezeichen) SQL-Injection fest!
+    $users = DB::select('SELECT * FROM users WHERE id=:id', ['id'=>3]);
+    dump($users);
+
+    $ret= DB::statement('ALTER TABLE `users` DROP `remember_token`;');
+    dump($ret);
+    
+    // var_dump($users);
+    // echo " ";
+    // print("$users");
+    // print_r("$users");
+    // die($users);
+    // exit($users);
+    //return "hallo"; // response 
+    // var_dump($users);
+    // dump($users);
+    // dd($users); // dump & die
+    // echo "das hier kommt nicht mehr";
+    // ddd();
+});
+
+
+// use Illuminate\Support\Facades\DB;
+// http://localhost/test_join
+Route::get('/test_join', function () {
+
+$users = DB::select('SELECT users.id as uid,users.name as uname ,projects.id ,projects.name,projects.user_id FROM users JOIN projects ON users.id = projects.user_id;');
+dd($users);
+
+/*
+SELECT *
+FROM users JOIN projects
+ON users.id = projects.user_id;
+
+
+*/
 });

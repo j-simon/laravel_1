@@ -3,11 +3,13 @@
 namespace App\Providers;
 
 use App\Contracts\PaymentGatewayContract;
+use App\Services\MailService;
 use App\Services\NotificationService;
 use App\Services\PaymentGateway;
 use App\Services\ReportService;
 use App\Services\StripePaymentGateway;
 use Illuminate\Support\ServiceProvider;
+use App\Contracts\MailServiceInterface;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -29,6 +31,8 @@ class AppServiceProvider extends ServiceProvider
        $this->app->singleton(NotificationService::class, function ($app) {
             return new NotificationService($app->make(\Illuminate\Contracts\Mail\Mailer::class));
         });
+
+        $this->app->bind(MailServiceInterface::class, MailService::class);
 
        // wlakthrough
         $this->app->bind(PaymentGatewayContract::class, StripePaymentGateway::class);
