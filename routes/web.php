@@ -411,8 +411,8 @@ use App\Http\Requests\StoreUserRequest;
 
 
 // http://localhost/profile
-// Route::get("profile", [ProfileController::class, "showProfile"]);
-Route::get("profile", "ProfileController@showProfile");
+Route::get("profile", [ProfileController::class, "showProfile"]);
+// Route::get("profile", ProfileController@showProfile");
 
 
 
@@ -526,6 +526,9 @@ Route::get("raw_sql", function () {
 
 // uebung 10
 use App\Facades\MailServiceFacade;
+use App\Http\Controllers\ProjectController;
+use App\Http\Controllers\UserController;
+
 //  http://localhost/send-email-ue10
 Route::get('/send-email-ue10', function () {
     return MailServiceFacade::send('Welcome to the Laravel course!');
@@ -535,7 +538,7 @@ Route::get('/send-email-ue10', function () {
 // http://localhost/test_debugbar_raw_sql
 Route::get('/test_debugbar_raw_sql', function () {
 
-    $erg=DB::insert('INSERT IGNORE INTO users (name, email) VALUES (?, ?)', ['John Doe', 'john@example.com']);
+    $erg = DB::insert('INSERT IGNORE INTO users (name, email) VALUES (?, ?)', ['John Doe', 'john@example.com']);
     dump($erg);
 
     // ohne parameter binding ! Vorsicht möglichkeit SQL-Injection
@@ -547,12 +550,12 @@ Route::get('/test_debugbar_raw_sql', function () {
     dump($users);
 
     // mit parameter binding (fragezeichen) SQL-Injection fest!
-    $users = DB::select('SELECT * FROM users WHERE id=:id', ['id'=>3]);
+    $users = DB::select('SELECT * FROM users WHERE id=:id', ['id' => 3]);
     dump($users);
 
-    $ret= DB::statement('ALTER TABLE `users` DROP `remember_token`;');
+    $ret = DB::statement('ALTER TABLE `users` DROP `remember_token`;');
     dump($ret);
-    
+
     // var_dump($users);
     // echo " ";
     // print("$users");
@@ -572,14 +575,113 @@ Route::get('/test_debugbar_raw_sql', function () {
 // http://localhost/test_join
 Route::get('/test_join', function () {
 
-$users = DB::select('SELECT users.id as uid,users.name as uname ,projects.id ,projects.name,projects.user_id FROM users JOIN projects ON users.id = projects.user_id;');
-dd($users);
+    $users = DB::select('SELECT users.id as uid,users.name as uname ,projects.id ,projects.name,projects.user_id FROM users JOIN projects ON users.id = projects.user_id;');
+    dd($users);
 
-/*
+    /*
 SELECT *
 FROM users JOIN projects
 ON users.id = projects.user_id;
 
 
 */
+});
+
+// uebung 11
+// http://localhost/uebung_11
+Route::get('/uebung_11', [UserController::class, "index"]);
+
+// uebung 11
+// index , Übersicht
+// http://localhost/projects
+
+// create - formular anzeigen
+// http://localhost/projects/create
+Route::resource('/projects', ProjectController::class);
+
+
+use Illuminate\Support\Collection;
+// use Illuminate\Support\Facades\DB;
+// http://localhost/kap15_collection_beispiel
+Route::get("kap15_collection_beispiel", function () {
+
+
+    // Create a collection from an array
+    // $users = [
+    //     ['name' => 'Max Mustermann', 'email' => 'max@example.com'],
+    //     ['name' => 'Anna Smith', 'email' => 'anna@web.com'],
+    // ];
+    // dump($users);
+
+    // $users = collect([
+    //     ['name' => 'Max Mustermann', 'email' => 'max@example.com'],
+    //     ['name' => 'Anna Smith', 'email' => 'anna@web.com'],
+    // ]);
+    // // Output the collection
+    // var_dump($users);
+
+    /*
+    object(Illuminate\Support\Collection)#1257 (2) {
+  ["items":protected]=&gt;
+  array(2) {
+    [0]=&gt;
+    array(2) {
+      ["name"]=&gt;
+      string(14) "Max Mustermann"
+      ["email"]=&gt;
+      string(15) "max@example.com"
+    }
+    [1]=&gt;
+    array(2) {
+      ["name"]=&gt;
+      string(10) "Anna Smith"
+      ["email"]=&gt;
+      string(12) "anna@web.com"
+    }
+  }
+  ["escapeWhenCastingToString":protected]=&gt;
+  bool(false)
+}
+  */
+
+    // // Filter users with a specific email domain
+    // $filteredUsers = $users->filter(function ($user) {
+    //     return str_starts_with($user['name'], 'Anna');
+    // });
+
+    // // Output the filtered collection
+    // dd($filteredUsers);
+
+    //     $emails = $users->pluck('email');
+
+    // // Output the list of emails
+    // dd($emails);
+    // ''
+    // $updatedUsers = $users->map(function ($user) {
+    //     $user['status'] = 'active';
+    //     return $user;
+    // });
+
+    // // Output the updated collection
+    // dd($updatedUsers);''
+
+
+
+    // Select all columns from the users table
+    // $users = DB::table('e1users_u1');
+    // dump($users);
+
+    // $users=$users->get();
+    // // var_dump($users);
+        // dump($users);
+    $users = DB::table('users')
+        ->select('name as N', 'email AS E')
+        ->where( "id",">",1 )
+        ->where( "name","LIKE","%i%" )
+        ->get();
+    dump($users);
+
+    var_dump(now());
+
+    return "OK!";
 });

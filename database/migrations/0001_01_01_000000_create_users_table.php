@@ -37,10 +37,10 @@ return new class extends Migration
             $table->integer('last_activity')->index();
         });
 
-        // seeden
-        DB::insert("INSERT INTO `users` (`id`, `name`) VALUES
-(1, 'Jens'),
-(2, 'Kim');");
+//         // seeden
+//         DB::insert("INSERT INTO `users` (`id`, `name`) VALUES
+// (1, 'Jens'),
+// (2, 'Kim');");
         
 
 
