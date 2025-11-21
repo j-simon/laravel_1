@@ -526,8 +526,12 @@ Route::get("raw_sql", function () {
 
 // uebung 10
 use App\Facades\MailServiceFacade;
+use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\UserController;
+use App\Models\Car;
+use App\Models\Order;
+use App\Models\User;
 
 //  http://localhost/send-email-ue10
 Route::get('/send-email-ue10', function () {
@@ -673,15 +677,352 @@ Route::get("kap15_collection_beispiel", function () {
 
     // $users=$users->get();
     // // var_dump($users);
-        // dump($users);
+    // dump($users);
     $users = DB::table('users')
         ->select('name as N', 'email AS E')
-        ->where( "id",">",1 )
-        ->where( "name","LIKE","%i%" )
+        ->where("id", ">", 1)
+        ->where("name", "LIKE", "%i%")
         ->get();
     dump($users);
 
     var_dump(now());
 
     return "OK!";
+});
+
+
+/*
+|--------------------------------------------------------------------------
+| Web Routes für Laravel Query Builder Kurs
+|--------------------------------------------------------------------------
+|
+| Rufe die Routen im Browser auf, um die Ausgaben der Beispiele zu sehen.
+| Die Ergebnisse werden mit dump() oder dd() ausgegeben.
+|
+*/
+
+// Kapitel 15.10: Sortieren von Daten
+// http://localhost/kap_15_10
+Route::get('/kap_15_10', function () {
+    echo '<h1>15.10 Sortieren von Daten (orderBy, latest, inRandomOrder)</h1>';
+
+    // 1. Einfaches Sortieren (Aufsteigend)
+    $usersAsc = DB::table('users_kap15')
+        ->orderBy('name', 'asc')
+        ->get();
+    dump("User nach Name aufsteigend:", $usersAsc); // Nur 3 anzeigen
+
+    // 2. Sortieren Absteigend
+    $usersDesc = DB::table('users_kap15')
+        ->orderBy('name', 'desc')
+        ->get();
+    dump("User nach Name absteigend:", $usersDesc->take(3));
+
+    // 3. Mehrfache Sortierung (Erst Rolle, dann Name)
+    $usersMulti = DB::table('users_kap15')
+        ->orderBy('role', 'asc')
+        ->orderBy('name', 'asc')
+        ->limit(5)
+        ->get();
+    dump("User sortiert nach Rolle, dann Name:", $usersMulti->take(5));
+
+    // 4. Neueste und Älteste Einträge
+    $latestUser = DB::table('users_kap15')->latest()->first();
+    $oldestUser = DB::table('users_kap15')->oldest()->first();
+    dump("Neuester User:", $latestUser, "Ältester User:", $oldestUser);
+
+    // 5. Zufällige Reihenfolge
+    $randomUser = DB::table('users_kap15')->inRandomOrder()->first();
+    dump("Ein zufälliger User:", $randomUser);
+});
+
+// http://localhost/kap_15_11
+// Kapitel 15.11: Bedingte Abfragen mit when()
+Route::get('/kap_15_11', function () {
+    echo '<h1>15.11 Bedingte Logik mit when()</h1>';
+
+    // Simulierte Request-Parameter
+    $role = null; // Ändere dies zu null oder 'user' zum Testen
+    $sortBy = 'age'; // Ändere zu 'name' oder null
+
+    $users = DB::table('users_kap15')
+        ->when($role, function ($query, $role) {
+            return $query->where('role', $role);
+        })
+        ->when($sortBy, function ($query, $sortBy) {
+            return $query->orderBy($sortBy);
+        }, function ($query) {
+            // Default Sortierung, wenn $sortBy null ist
+            return $query->orderBy('name');
+        })
+        ->get();
+
+    dump("Gefilterte User (Rolle: $role, Sortierung: $sortBy):", $users);
+});
+
+// Kapitel 15.12: Chunking (Große Datenmengen)
+// http://localhost/kap_15_12
+Route::get('/kap_15_12', function () {
+    echo '<h1>15.12 Chunking</h1>';
+
+    echo "<p>Schau in die Logs oder die Ausgabe hier. Wir iterieren über User in 10er Schritten.</p>";
+
+    // Chunking Beispiel
+    DB::table('users_kap15')->orderBy('id')->chunk(1000, function ($users) {
+        echo "neuer chunk<br>";
+        foreach ($users as $user) {
+            dump("Verarbeite User ID: " . $user->id);
+
+            // Beispiel: Bedingtes Abbrechen
+            if ($user->id > 25) {
+                dump("Abbruch bei ID > 25");
+                return false; // Stoppt das Chunking
+            }
+        }
+    });
+
+    // chunkById Beispiel (besser für Updates während der Iteration)
+    echo "<hr><h3>chunkById</h3>";
+    DB::table('users_kap15')->where('active', true)->chunkById(10, function ($users) {
+        foreach ($users as $user) {
+            dump("Active User (chunkById): " . $user->name);
+        }
+    });
+});
+
+// Kapitel 15.13: Raw Expressions
+// http://localhost/kap_15_13
+Route::get('/kap_15_13', function () {
+    echo '<h1>15.13 Raw Expressions (Rohes SQL)</h1>';
+
+    // 1. selectRaw: Berechnungen im Select
+    // Annahme: products Tabelle existiert
+    $products = DB::table('products')
+        // ->select('name', 'price * 1.19 as price_with_tax')
+        ->selectRaw('name, price * ? as price_with_tax', [1.19])
+        ->get();
+    dump("Produkte mit MwSt (selectRaw):", $products);
+
+    // // 2. whereRaw: Komplexe Where Klauseln
+    // $orders = DB::table('orders')
+    //     ->whereRaw('amount > IF(status = "completed", 100, 50)')
+    //     ->get();
+    // dump("Orders mit komplexer whereRaw Bedingung:", $orders);
+
+    // // 3. orderByRaw
+    // $users = DB::table('users_kap15')
+    //     ->orderByRaw('updated_at - created_at DESC')
+    //     ->get();
+    // dump("User sortiert nach Differenz Erstellt/Aktualisiert:", $users->take(3));
+
+    // // 4. havingRaw (in Kombination mit groupBy)
+    // $highValueOrders = DB::table('orders')
+    //     ->select('user_id', DB::raw('SUM(amount) as total_amount'))
+    //     ->groupBy('user_id')
+    //     ->havingRaw('SUM(amount) > ?', [100])
+    //     ->get();
+    // dump("User mit Bestellsumme > 100 (havingRaw):", $highValueOrders);
+});
+
+// Kapitel 15.14: Aggregatfunktionen
+// http://localhost/kap_15_14
+Route::get('/kap_15_14', function () {
+    echo '<h1>15.14 Aggregatfunktionen</h1>';
+
+    // 1. Count
+    $userCount = DB::table('users_kap15')->count();
+    dump("Anzahl User:", $userCount);
+
+    // 2. Max / Min
+    $maxPrice = DB::table('products')->max('price');
+    $minPrice = DB::table('products')->min('price');
+    dump("Teuerstes Produkt: $maxPrice, Günstigstes: $minPrice");
+
+    // 3. Avg (Durchschnitt)
+    $avgAge = DB::table('users_kap15')->avg('age');
+    dump("Durchschnittsalter der User:", $avgAge);
+
+    // 4. Sum
+    $totalRevenue = DB::table('orders')->where('status', 'completed')->sum('amount');
+    dump("Gesamtumsatz (completed):", $totalRevenue);
+
+    // 5. Existenzprüfung
+    $exists = DB::table('users_kap15')->where('email', 'like', '%@example.com')->exists();
+    $doesntExist = DB::table('users_kap15')->where('id', 999999)->doesntExist();
+    dump("User mit @example.com existiert?", $exists);
+    dump("User 999999 existiert nicht?", $doesntExist);
+});
+
+// Kapitel 15.15: Joins
+// http://localhost/kap_15_15
+Route::get('/kap_15_15', function () {
+    echo '<h1>15.15 Joins (Tabellen verknüpfen)</h1>';
+
+    // 1. Inner Join (Users mit Orders)
+    $usersWithOrders = DB::table('users_kap15')
+        ->select('users_kap15.name', 'orders.amount', 'orders.status')
+        ->join('orders', 'users_kap15.id', '=', 'orders.user_id')
+        ->get();
+    dump("Inner Join (User mit Bestellungen):", $usersWithOrders->take(5));
+
+    // SELECT `users_kap15`.`name`, `orders`.`amount`, `orders`.`status` 
+    // FROM `users_kap15`
+    // JOIN `orders` 
+    // ON `users_kap15`.`id` = `orders`.`user_id`
+    return;
+    // 2. Left Join (Alle User, auch ohne Orders)
+    $allUsersAndOrders = DB::table('users_kap15')
+        ->leftJoin('orders', 'users_kap15.id', '=', 'orders.user_id')
+        ->select('users_kap15.name', 'orders.id as order_id')
+        ->get();
+    dump("Left Join (Alle User):", $allUsersAndOrders->take(5));
+
+    // 3. Cross Join (Jeder mit Jedem - Vorsicht bei großen Tabellen!)
+    // Hier limitiert auf wenige Datensätze zur Demo
+    $cross = DB::table('products')->limit(2)
+        ->crossJoin('categories')
+        ->select('products.name as product', 'categories.name as category')
+        ->get();
+    dump("Cross Join (Produkt x Kategorie):", $cross);
+
+    // 4. Advanced Join Clause (Join mit zusätzlichen Bedingungen)
+    $advanced = DB::table('users_kap15')
+        ->join('orders', function ($join) {
+            $join->on('users_kap15.id', '=', 'orders.user_id')
+                ->where('orders.status', '=', 'completed');
+        })
+        ->select('users_kap15.name', 'orders.amount')
+        ->get();
+    dump("Advanced Join (Nur completed Orders):", $advanced->take(5));
+});
+
+// Kapitel 15.16: Unions
+// http://localhost/kap_15_16
+Route::get('/kap_15_16', function () {
+    echo '<h1>15.16 Unions (Abfragen kombinieren)</h1>';
+
+    // Vorbereitung: Wir wollen Namen und Emails aus 'users_kap15' und 'contacts' in einer Liste
+
+    $first = DB::table('users_kap15')
+        ->select('name', 'email');
+    //->where('id', '<', 5); // Nur ein paar User
+
+    $usersAndContacts = DB::table('contacts')
+        ->select('name', 'email')
+        ->union($first)
+        ->get();
+
+    dump("Union von Users und Contacts:", $usersAndContacts);
+
+    // intersect() (Schnittmenge) - Hinweis: Das ist eine Collection-Methode, keine SQL-Methode in älteren Laravel Versionen direkt im Builder, 
+    // aber in neueren Versionen oder als logisches Konzept in der Datei erwähnt.
+    // Hier simulieren wir es mit Collections, da es oft so verwendet wird.
+
+    // 1. Wir holen uns NUR die IDs als Collection (pluck)
+    $activeIds = DB::table('users_kap15')->where('active', 1)->get();; //->pluck('id');
+    $adultIds  = DB::table('users_kap15')->where('age', '>=', 18)->get(); //->pluck('id');
+
+    // 2. Jetzt funktioniert intersect(), weil es einfache Zahlen vergleicht
+    $commonIds = $activeIds->intersect($adultIds);
+
+    dump("Gemeinsame IDs:", $commonIds);
+
+    // 3. (Optional) Wenn du die ganzen User-Daten dazu willst:
+    if ($commonIds->isNotEmpty()) {
+        $users = DB::table('users_kap15')->whereIn('id', $commonIds)->get();
+        dump("Die User zur Schnittmenge:", $users);
+    }
+});
+
+
+// uebung 13
+// http://localhost/uebung13
+Route::get("/uebung13", function (Request $request) {
+
+    $users = User::addSelect([
+        'last_order_date' => Order::select('created_at')
+            ->whereColumn('orders.user_id', 'users_kap15.id')
+            ->latest()
+            ->take(1)
+    ])->get();
+    dump($users);
+    foreach ($users as $user) {
+        echo $user->name . ' - ' . $user->last_order_date . PHP_EOL;
+    }
+
+    $orders = DB::table('orders_u13');
+
+    // total_price
+    if ($request->filled("total_price"))
+        $orders = $orders->where('total_price', ">=", $request->input('total_price'));
+
+
+    $orders = $orders->get();
+
+
+    return view("orders", compact("orders"));
+})->name("ue13");
+
+
+Route::get("/wetter", function () {
+    //  DB::table('wetter_koeln')->orderBy("ts")->chunk(100, function ($daten) {
+    //     echo "neuer chunk<br>";
+    //     foreach ($daten as $data) {
+    //         //dump($data);
+
+
+    //     }
+    // });
+    $daten = DB::table('wetter_koeln')->get();
+    dump($daten);
+});
+
+Route::get("/cars", function () {
+    $cars = Car::all();
+    // dump($cars);
+
+    $car = Car::find("2025-01-19 16:14:00");
+    // dump($car);
+
+    $car = Car::findOrFail("20201-19 16:14:00");
+    // echo($car);
+});
+
+
+// ue 14 
+// http://localhost/products_ue14
+Route::get("/products_ue14", [ProductController::class, "index"]);
+Route::post("/product_ue14_store", [ProductController::class, "store"])->withoutMiddleware([VerifyCsrfToken::class]);;
+
+// http://localhost/orders_subselect_eloquent
+Route::get("orders_subselect_eloquent", function () {
+    $users = User::addSelect([
+        'last_order_date' => Order::select('created_at')
+            ->whereColumn('orders.user_id', 'users_kap15.id')
+            ->latest()
+            ->take(1)
+    ])->get();
+
+    foreach ($users as $user) {
+        echo $user->name . ' - ' . $user->last_order_date ."<br>";
+    }
+});
+
+// http://localhost/loesche_order/15
+Route::get("loesche_order/{id}", function ($id) {
+    // $order=Order::find($id);
+    // dump($order);
+    // $order->delete();
+    
+    // Order::destroy([12]);
+    
+    $order=Order::withTrashed()->get();
+    dump($order);
+
+     $order=Order::withoutTrashed()->get();
+    dump($order);
+
+    $order=Order::onlyTrashed()->get();
+    dump($order);
+    return "ok";
 });
